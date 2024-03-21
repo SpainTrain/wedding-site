@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /invitees/{invitee} {
+      allow read, write: if resource.data.email == request.auth.token.email
+    }
+
+    match /guests/{guest} {
+      allow read, write: if resource.data.email == request.auth.token.email
+      allow read, write: if request.auth.token.email == get(/databases/$(database)/documents/invitees/$(resource.data.inviteeId)).data.email
+      allow create: if request.auth.token.email == get(/databases/$(database)/documents/invitees/$(request.resource.data.inviteeId)).data.email
+    }
+
+    match /events/{event} {
+      allow read: if request.auth != null
+    }
+
+    match /{document=**} {
+      allow read, write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
